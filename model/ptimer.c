@@ -1,14 +1,27 @@
 #include "ptimer.h"
 
+void ptimer_INIT(PTimer *item);
+void ptimer_WAIT_ON(PTimer *item);
+void ptimer_WAIT_OFF(PTimer *item);
+void ptimer_ON(PTimer *item);
+void ptimer_OFF(PTimer *item);
+
+void ptimer_funcIdle(void *data, int state){
+	printd("ptimer: idle function "); printdln(state);
+}
+
 void ptimer_setParam(PTimer *item, void *data, void (*func)(void *, int),  unsigned long interval_on_s, unsigned long interval_off_s){
 	item->interval_on = interval_on_s;
 	item->interval_off = interval_off_s;
 	item->data = data;
 	item->func = func;
+	if(item->func == NULL){
+		item->func = ptimer_funcIdle;
+	}
 }
 
 void ptimer_begin(PTimer *item){
-	item->state = INIT;
+	item->control = ptimer_INIT;
 }
 
 int ptimer_check(PTimer *item){
@@ -17,67 +30,95 @@ int ptimer_check(PTimer *item){
 
 
 void ptimer_reset(PTimer *item){
-	item->state = INIT;
+	item->control = ptimer_INIT;
 }
 
 int ptimer_getOutput(PTimer *item){
-	switch(item->state){
-		case WAIT_OFF:
-		case ON:
-			return ON;
-	}
+	if(item->control == ptimer_WAIT_OFF || item->control == ptimer_ON) return ON;
 	return OFF;
 }
 
 void ptimer_setOutput(PTimer *item){
-	int state = OFF;
-	switch(item->state){
-		case WAIT_OFF:
-		case ON: state = ON;
+	item->func(item->data, ptimer_getOutput(item));
+}
+
+void ptimer_INIT(PTimer *item){
+	if(item->interval_on == 0){
+		item->control = ptimer_OFF;
+	}else if(item->interval_off == 0){
+		item->control = ptimer_ON;
+	}else{
+		ton_setInterval(&item->tmr, item->interval_on * MILLISECONDS_IN_SECOND);
+		ton_reset(&item->tmr);
+		item->control = ptimer_WAIT_OFF;
 	}
-	if(item->func != NULL){
-		item->func(item->data, state);
+	ptimer_setOutput(item);
+}
+
+void ptimer_WAIT_ON(PTimer *item){
+	if(ton(&item->tmr)){
+		ton_setInterval(&item->tmr, item->interval_on * MILLISECONDS_IN_SECOND);
+		ton_reset(&item->tmr);
+		item->control = ptimer_WAIT_OFF;
+		ptimer_setOutput(item);
 	}
 }
 
-int ptimer_control(PTimer *item){
-	switch(item->state){
-		case WAIT_ON:
-			if(ton(&item->tmr)){
-				ton_setInterval(&item->tmr, item->interval_on * MILLISECONDS_IN_SECOND);
-				ton_reset(&item->tmr);
-				item->state = WAIT_OFF;
-				ptimer_setOutput(item);
-			}
-			break;
-		case WAIT_OFF:
-			if(ton(&item->tmr)){
-				ton_setInterval(&item->tmr, item->interval_off * MILLISECONDS_IN_SECOND);
-				ton_reset(&item->tmr);
-				item->state = WAIT_ON;
-				ptimer_setOutput(item);
-			}
-			break;
-		case ON: break;
-		case OFF: break;
-		case INIT:
-			if(item->interval_on == 0){
-				item->state = OFF;
-			}else if(item->interval_off == 0){
-				item->state = ON;
-			}else{
-				ton_setInterval(&item->tmr, item->interval_on * MILLISECONDS_IN_SECOND);
-				ton_reset(&item->tmr);
-				item->state = WAIT_OFF;
-			}
-			ptimer_setOutput(item);
-			break;
+void ptimer_WAIT_OFF(PTimer *item){
+	if(ton(&item->tmr)){
+		ton_setInterval(&item->tmr, item->interval_off * MILLISECONDS_IN_SECOND);
+		ton_reset(&item->tmr);
+		item->control = ptimer_WAIT_ON;
+		ptimer_setOutput(item);
 	}
-	return item->state;
 }
+
+void ptimer_ON(PTimer *item){
+	;
+}
+
+void ptimer_OFF(PTimer *item){
+	;
+}
+
+//int ptimer_control(PTimer *item){
+	//switch(item->state){
+		//case WAIT_ON:
+			//if(ton(&item->tmr)){
+				//ton_setInterval(&item->tmr, item->interval_on * MILLISECONDS_IN_SECOND);
+				//ton_reset(&item->tmr);
+				//item->control = ptimer_WAIT_OFF;
+				//ptimer_setOutput(item);
+			//}
+			//break;
+		//case WAIT_OFF:
+			//if(ton(&item->tmr)){
+				//ton_setInterval(&item->tmr, item->interval_off * MILLISECONDS_IN_SECOND);
+				//ton_reset(&item->tmr);
+				//item->control = ptimer_WAIT_ON;
+				//ptimer_setOutput(item);
+			//}
+			//break;
+		//case ON: break;
+		//case OFF: break;
+		//case INIT:
+			//if(item->interval_on == 0){
+				//item->control = ptimer_OFF;
+			//}else if(item->interval_off == 0){
+				//item->control = ptimer_ON;
+			//}else{
+				//ton_setInterval(&item->tmr, item->interval_on * MILLISECONDS_IN_SECOND);
+				//ton_reset(&item->tmr);
+				//item->control = ptimer_WAIT_OFF;
+			//}
+			//ptimer_setOutput(item);
+			//break;
+	//}
+	//return item->state;
+//}
 
 unsigned int ptimer_getTimeRest(PTimer *item){
-	if(item->state == WAIT_ON || item->state == WAIT_OFF){
+	if(item->control == ptimer_WAIT_ON || item->control == ptimer_WAIT_OFF){
 		return ton_getRest(&item->tmr);
 	}
 	return 0;

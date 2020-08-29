@@ -6,12 +6,13 @@
 #include "../rtc/main.h"
 
 
-typedef struct {
-	int state;
+typedef struct dtimer_st{
 	unsigned long time_on;
 	unsigned long time_off;
 	Ton tmr;
+	void (*control) (struct dtimer_st *);
 } DTimer;
+
 
 extern int dtimer_check(DTimer *item);
 
@@ -19,10 +20,10 @@ extern void dtimer_setParam(DTimer *item, unsigned long hour1, unsigned long min
 
 extern void dtimer_begin(DTimer *item);
 
-extern int dtimer_control(DTimer *item, RTC *rtc);
-
 extern unsigned long dtimer_getTimeRest(DTimer *item);
 
 extern const char *dtimer_getStateStr(DTimer *item);
+
+extern int dtimer_getState(DTimer *item);
 
 #endif 

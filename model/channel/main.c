@@ -4,9 +4,15 @@ extern AppSerial serials[SERIAL_COUNT];
 extern RTC rtc;
 
 Channel channel_buf[CHANNEL_COUNT];
+extern const ChannelParam CHANNEL_DEFAULT_PARAMS[];
 
 #define TURN_EM_ON(PIN) digitalWrite((PIN), EM_ON); printdln("ON");
 #define TURN_EM_OFF(PIN) digitalWrite((PIN), EM_OFF); printdln("OFF");
+
+void channel_INIT(Channel *item);
+void channel_RUN(Channel *item);
+void channel_OFF(Channel *item);
+void channel_FAILURE(Channel *item);
 
 int channel_check(Channel *item){
 	if(!common_checkBlockStatus(item->enable)){
@@ -33,12 +39,10 @@ const char *channel_getErrorStr(Channel *item){
 }
 
 const char *channel_getStateStr(Channel *item){
-	switch(item->state){
-		case RUN:return "RUN";
-		case OFF:return "OFF";
-		case INIT:return "INIT";
-		case FAILURE:return "FAILURE";
-	}	
+	if(item->control == channel_RUN)			return "RUN";
+	else if(item->control == channel_OFF)		return "OFF";
+	else if(item->control == channel_INIT)		return "INIT";
+	else if(item->control == channel_FAILURE)	return "FAILURE";
 	return "?";
 }
 
@@ -85,7 +89,7 @@ void channel_begin(Channel *item, size_t ind, int default_btn){
 	printd("beginning channel ");printd(ind); printdln(":");
 	item->error_id = ERROR_NO;
 	channel_setParam(item, ind, default_btn);
-	item->state = INIT;
+	item->control = channel_INIT;
 	printd("\tid: ");printdln(item->id);
 	printd("\n");
 }
@@ -107,7 +111,7 @@ void channels_begin(ChannelLList *channels, int default_btn){
 	extern Channel channel_buf[CHANNEL_COUNT];
 	channels_buildFromArray(channels, channel_buf);
 	size_t i = 0;
-	FOREACH_CHANNEL(channels)
+	FOREACH_CHANNEL(channels){
 		channel_begin(channel, i, default_btn); i++;
 	}
 }
@@ -115,7 +119,7 @@ void channels_begin(ChannelLList *channels, int default_btn){
 int channel_start(Channel *item){
 	printd("starting channel ");printd(item->ind);printdln(":");
 	item->enable = YES;
-	item->state = INIT;
+	item->control = channel_INIT;
 	CHANNEL_SAVE_FIELD(enable)
 	return 1;
 }
@@ -123,7 +127,7 @@ int channel_start(Channel *item){
 int channel_stop(Channel *item){
 	printd("stopping channel ");printdln(item->ind); 
 	item->enable = NO;
-	item->state = DISABLE;
+	item->control = channel_OFF;
 	CHANNEL_SAVE_FIELD(enable)
 	return 1;
 }
@@ -131,13 +135,13 @@ int channel_stop(Channel *item){
 int channel_reload(Channel *item){
 	printd("reloading channel ");printd(item->ind); printdln(":");
 	channel_setFromNVRAM(item, item->ind);
-	item->state = INIT;
+	item->control = channel_INIT;
 	return 1;
 }
 
 int channels_activeExists(ChannelLList *channels){
-	FOREACH_CHANNEL(channels)
-		if(channel->state != OFF){
+	FOREACH_CHANNEL(channels){
+		if(channel->control != channel_OFF){
 			return 1;
 		}
 	}
@@ -145,7 +149,7 @@ int channels_activeExists(ChannelLList *channels){
 }
 
 void channels_stop(ChannelLList *channels){
-	FOREACH_CHANNEL(channels)
+	FOREACH_CHANNEL(channels){
 		channel_stop(channel);
 	}
 }
@@ -159,53 +163,95 @@ double channel_getOutput(Channel *item){
 	return 0.0;
 }
 
-void channel_control(Channel *item) {
-	switch(item->state){
-		case RUN:{
-			int s = dtimer_control(&item->dtimer, &rtc);
-			if(s == FAILURE){
-				TURN_EM_OFF(item->pin);
-				item->state = FAILURE;
-				break;
-			}
-			if(s != item->last_dtimer_state){
-				ptimer_reset(&item->ptimer);
-			}
-			if(dtimer_getOutput(&item->dtimer) == ON){
-				ptimer_control(&item->ptimer);
-			}
-			item->last_dtimer_state = s;}
-			break;
-		case DISABLE:
-			item->state = OFF;
-			break;
-		case OFF:
-			break;
-		case FAILURE:
-			break;
-		case INIT:
-			if(item->error_id != ERROR_NO){
-		        item->state = FAILURE;
-		        break;
-		    }
-			item->error_id = channel_check(item);
-		    if(item->error_id != ERROR_NO){
-		        item->state = FAILURE;
-		        break;
-		    }
-		    pinMode(item->pin, OUTPUT);
-			dtimer_begin(&item->dtimer);
-			ptimer_begin(&item->ptimer);
-			item->state = OFF;
-			if(item->enable == YES){
-				item->state = RUN;
-			}
-			printd("\tINIT: ");printd(item->id); printd(" "); printd(" state=");printd(channel_getStateStr(item));printd(" error=");printd(channel_getErrorStr(item));printd("\n");
-			break;
-		default:
-			break;
+void channel_INIT(Channel *item) {
+	if(item->error_id != ERROR_NO){
+		item->control = channel_FAILURE;
+		return;
 	}
+	item->error_id = channel_check(item);
+	if(item->error_id != ERROR_NO){
+		item->control = channel_FAILURE;
+		return;
+	}
+	pinMode(item->pin, OUTPUT);
+	dtimer_begin(&item->dtimer);
+	ptimer_begin(&item->ptimer);
+	item->control = channel_OFF;
+	if(item->enable == YES){
+		item->control = channel_RUN;
+	}
+	printd("\tINIT: ");printd(item->id); printd(" "); printd(" state=");printd(channel_getStateStr(item));printd(" error=");printd(channel_getErrorStr(item));printd("\n");
 }
+
+void channel_RUN(Channel *item) {
+	CONTROL(&item->dtimer);
+	int s = dtimer_getState(&item->dtimer);
+	if(s == FAILURE){
+		TURN_EM_OFF(item->pin);
+		item->control = channel_FAILURE;
+		return;
+	}
+	if(s != item->last_dtimer_state){
+		ptimer_reset(&item->ptimer);
+	}
+	if(dtimer_getOutput(&item->dtimer) == ON){
+		CONTROL(&item->ptimer);
+	}
+	item->last_dtimer_state = s;
+}
+
+void channel_OFF(Channel *item) {
+	;
+}
+
+void channel_FAILURE(Channel *item) {
+	;
+}
+
+//void channel_control(Channel *item) {
+	//switch(item->state){
+		//case RUN:{
+			//int s = dtimer_control(&item->dtimer, &rtc);
+			//if(s == FAILURE){
+				//TURN_EM_OFF(item->pin);
+				//item->state = channel_FAILURE;
+				//break;
+			//}
+			//if(s != item->last_dtimer_state){
+				//ptimer_reset(&item->ptimer);
+			//}
+			//if(dtimer_getOutput(&item->dtimer) == ON){
+				//ptimer_control(&item->ptimer);
+			//}
+			//item->last_dtimer_state = s;}
+			//break;
+		//case OFF:
+			//break;
+		//case FAILURE:
+			//break;
+		//case INIT:
+			//if(item->error_id != ERROR_NO){
+		        //item->state = channel_FAILURE;
+		        //break;
+		    //}
+			//item->error_id = channel_check(item);
+		    //if(item->error_id != ERROR_NO){
+		        //item->state = channel_FAILURE;
+		        //break;
+		    //}
+		    //pinMode(item->pin, OUTPUT);
+			//dtimer_begin(&item->dtimer);
+			//ptimer_begin(&item->ptimer);
+			//item->state = channel_OFF;
+			//if(item->enable == YES){
+				//item->state = channel_RUN;
+			//}
+			//printd("\tINIT: ");printd(item->id); printd(" "); printd(" state=");printd(channel_getStateStr(item));printd(" error=");printd(channel_getErrorStr(item));printd("\n");
+			//break;
+		//default:
+			//break;
+	//}
+//}
 
 Channel * channel_getById(int id, Channel *channels, size_t channel_count){
 	for(size_t i = 0; i< channel_count;i++){

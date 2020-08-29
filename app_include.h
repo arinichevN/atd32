@@ -8,7 +8,6 @@
 #include "util/ton.c"
 #include "util/serial.c"
 #include "pmem/main.c"
-#include "util/caller_queue.c"
 #include "rtc/date_time.c"
 #include "rtc/DS3231.c"
 #include "rtc/main.c"
@@ -20,9 +19,8 @@
 
 #include "acp/main.c"
 #include "acp/loop/main.c"
-#include "acp/loop/client.c"
-#include "acp/loop/multi.c"
 
+#include "app/error_indicator.c"
 #include "app/serial_config.c"
 #include "app/config.c"
 #include "app/serial.c"
