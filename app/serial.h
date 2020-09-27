@@ -38,14 +38,14 @@ typedef struct app_serial_st {
 	int id; //SerialIdE from util/serial.h
 	HardwareSerial *device;
 	void *controller;
-	int kind;
+	int mode;
 	void (*control) (struct app_serial_st *);
 	void (*free) (struct app_serial_st *);
 } AppSerial;
 
 
 extern void appSerials_init(AppSerial serials[]);
-extern int appSerial_beginKind(AppSerial *serial, AppSerialConfig *config, HardwareSerial **serial_debug);
+extern int appSerial_beginMode(AppSerial *serial, AppSerialConfig *config, HardwareSerial **serial_debug);
 extern void appSerials_control(AppSerial serials[]);
 extern AppSerial *appSerials_getClientSerialById(AppSerial serials[], int id);
 #define appSerial_free(item) item->free(item)
