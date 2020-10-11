@@ -70,16 +70,16 @@ static unsigned long calcIntervalMS(unsigned long t1,  unsigned long t2, unsigne
 	return 0;
 }
 
-int dtimer_check(DTimer *item){
-	if(item->time_on > SECONDS_IN_DAY){
+int dtimer_checkParam(unsigned long time_on_s, unsigned long time_off_s){
+	if(time_on_s > SECONDS_IN_DAY){
 		printdln("time_on is over");
 		return ERROR_SOME;
 	}
-	if(item->time_off > SECONDS_IN_DAY){
+	if(time_off_s > SECONDS_IN_DAY){
 		printdln("time_off is over");
 		return ERROR_SOME;
 	}
-	if(item->time_on == item->time_off){
+	if(time_on_s == time_off_s){
 		printdln("time_on == time_off");
 		return ERROR_SOME;
 	}

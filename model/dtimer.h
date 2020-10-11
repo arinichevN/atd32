@@ -14,7 +14,7 @@ typedef struct dtimer_st{
 } DTimer;
 
 
-extern int dtimer_check(DTimer *item);
+extern int dtimer_checkParam(unsigned long time_on_s, unsigned long time_off_s);
 
 extern void dtimer_setParam(DTimer *item, unsigned long hour1, unsigned long minute1, unsigned long second1, unsigned long hour2, unsigned long minute2, unsigned long second2);
 

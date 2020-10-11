@@ -24,7 +24,7 @@ void ptimer_begin(PTimer *item){
 	item->control = ptimer_INIT;
 }
 
-int ptimer_check(PTimer *item){
+int ptimer_checkParam(unsigned long interval_on_s, unsigned long interval_off_s){
 	return ERROR_NO;
 }
 
@@ -80,42 +80,6 @@ void ptimer_ON(PTimer *item){
 void ptimer_OFF(PTimer *item){
 	;
 }
-
-//int ptimer_control(PTimer *item){
-	//switch(item->state){
-		//case WAIT_ON:
-			//if(ton(&item->tmr)){
-				//ton_setInterval(&item->tmr, item->interval_on * MILLISECONDS_IN_SECOND);
-				//ton_reset(&item->tmr);
-				//item->control = ptimer_WAIT_OFF;
-				//ptimer_setOutput(item);
-			//}
-			//break;
-		//case WAIT_OFF:
-			//if(ton(&item->tmr)){
-				//ton_setInterval(&item->tmr, item->interval_off * MILLISECONDS_IN_SECOND);
-				//ton_reset(&item->tmr);
-				//item->control = ptimer_WAIT_ON;
-				//ptimer_setOutput(item);
-			//}
-			//break;
-		//case ON: break;
-		//case OFF: break;
-		//case INIT:
-			//if(item->interval_on == 0){
-				//item->control = ptimer_OFF;
-			//}else if(item->interval_off == 0){
-				//item->control = ptimer_ON;
-			//}else{
-				//ton_setInterval(&item->tmr, item->interval_on * MILLISECONDS_IN_SECOND);
-				//ton_reset(&item->tmr);
-				//item->control = ptimer_WAIT_OFF;
-			//}
-			//ptimer_setOutput(item);
-			//break;
-	//}
-	//return item->state;
-//}
 
 unsigned int ptimer_getTimeRest(PTimer *item){
 	if(item->control == ptimer_WAIT_ON || item->control == ptimer_WAIT_OFF){
