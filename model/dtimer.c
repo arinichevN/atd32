@@ -155,58 +155,6 @@ void dtimer_FAILURE(DTimer *item){
 	;
 }
 
-//int dtimer_control(DTimer *item){
-	//switch(item->control){
-		//case IDLE:
-			//if(ton(&item->tmr)){
-				//unsigned long t;
-				//if(!getTimeOfDayS(&t)){
-					//item->control = dtimer_FAILURE;
-					//PRINTINFO(item)
-					//break;
-				//}
-				//if(calcState(item->time_on, item->time_off, t) == BUSY){
-					//TON_PREP(item, t)
-					//item->control = dtimer_BUSY;
-					//PRINTINFO(item)
-				//}
-			//}
-			//break;
-		//case BUSY:
-			//if(ton(&item->tmr)){
-				//unsigned long t;
-				//if(!getTimeOfDayS(&t)){
-					//item->control = dtimer_FAILURE;
-					//PRINTINFO(item)
-					//break;
-				//}
-				//if(calcState(item->time_on, item->time_off, t) == IDLE){
-					//TON_PREP(item, t)
-					//item->control = dtimer_IDLE;
-					//PRINTINFO(item)
-				//}
-			//}
-			//break;
-		//case OFF:
-			//break;
-		//case FAILURE:
-			//break;
-		//case INIT:{
-			//unsigned long t;
-			//if(!getTimeOfDayS(&t)){
-				//item->control = dtimer_FAILURE;
-				//PRINTINFO(item)
-				//break;
-			//}
-			//setStateById(item, calcState(item->time_on, item->time_off, t));
-			//TON_PREP(item, t)
-			//}
-			//PRINTINFO(item)
-			//break;
-	//}
-	//return item->control;
-//}
-
 unsigned long dtimer_getTimeRest(DTimer *item){
 	if(item->control == dtimer_IDLE || item->control == dtimer_BUSY){
 		return ton_getRest(&item->tmr);
