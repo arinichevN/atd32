@@ -1,35 +1,56 @@
 #ifndef APP_INCLUDE_H
 #define APP_INCLUDE_H
 
-#include "util/debug.h"
-#include "util/common.c"
-#include "util/crc.c"
-#include "util/check.c"
-#include "util/ton.c"
-#include "util/serial.c"
-#include "pmem/main.c"
-#include "rtc/date_time.c"
-#include "rtc/DS3231.c"
-#include "rtc/main.c"
+#include "lib/debug.h"
+#include "lib/common.c"
+#include "lib/crc.c"
+#include "lib/check.c"
+#include "lib/ton.c"
+#include "lib/serial.c"
+#include "lib/caller_queue.c"
+#include "lib/stopwatch.c"
 
-#include "model/dtimer.c"
-#include "model/ptimer.c"
-#include "model/channel/default.c"
-#include "model/channel/main.c"
-
-#include "acp/main.c"
-#include "acp/loop/main.c"
-
-#include "app/error_indicator.c"
-#include "app/serial_config.c"
-#include "app/config.c"
-#include "app/serial.c"
-#include "app/main.c"
-
+#include "lib/acp/main.c"
+#include "lib/acp/loop/main.c"
+#include "lib/acp/loop/client/main.c"
+#include "lib/acp/loop/client/multi.c"
+#include "lib/acp/loop/spy/main.c"
 #ifdef SERIAL_SERVER
-#include "app/server_config.c"
-#include "acp/loop/server.c"
+#include "lib/acp/loop/server/main.c"
 #endif
 
+#include "pmem/main.c"
+
+#include "model/DTimer/param.c"
+#include "model/DTimer/main.c"
+#include "model/PTimer/param.c"
+#include "model/PTimer/main.c"
+#include "model/Channel/param.c"
+#include "model/Channel/main.c"
+#include "model/Channel/llist.c"
+
+#ifdef SERIAL_SERVER
+#include "app/serials/server/config.c"
+#endif
+#ifdef USE_AOIDS
+#include "app/aoids/main.c"
+#include "app/serials/server/aoid.c"
+#endif
+#ifdef USE_NOIDS
+#include "app/noids/param.c"
+#include "app/noids/main.c"
+#include "app/serials/server/noid.c"
+#endif
+#include "app/rtc/date_time.c"
+#include "app/rtc/DS3231.c"
+#include "app/rtc/main.c"
+#include "app/AppErrorIndicator/main.c"
+#include "app/AppSerial/param.c"
+#include "app/AppSerial/main.c"
+#include "app/AppSerial/llist.c"
+#include "app/serials/main.c"
+#include "app/channels/main.c"
+#include "app/param.c"
+#include "app/main.c"
 
 #endif 
