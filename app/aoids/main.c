@@ -21,9 +21,7 @@ static void app_serveAoidRequestSelf(void *vself, Aoid *oid, void *vserver, int 
 			app_reset();
 			acpls_reset(server);
 			return;
-		case CMD_AOID_GET_ACP_COMMAND_SUPPORTED:
-			aoidServer_sendSupportedR(oid, server);
-			return;
+		CASE_AOID_GET_ACP_COMMAND_SUPPORTED(R)
 	}
 	acpls_reset(server);
 }
@@ -58,9 +56,7 @@ static void app_serveAoidRequestId(void *vself, Aoid *oid, void *vserver, int co
 			}
 			acpls_reset(server);
 			return;
-		case CMD_AOID_GET_ACP_COMMAND_SUPPORTED:
-			aoidServer_sendSupportedGGS(oid, server);
-			return;
+		CASE_AOID_GET_ACP_COMMAND_SUPPORTED(GGS)
 	}
 	
 	acpls_reset(server);
@@ -72,9 +68,7 @@ static void app_serveAoidRequestDeviceKind(void *vself, Aoid *oid, void *vserver
 		case CMD_AOID_GET_RAM_VALUE:
 			aoidServer_sendII(oid, server, app_device_kind, YES);
 			return;
-		case CMD_AOID_GET_ACP_COMMAND_SUPPORTED:
-			aoidServer_sendSupportedGr(oid, server);
-			return;
+		CASE_AOID_GET_ACP_COMMAND_SUPPORTED(Gr)
 	}
 	acpls_reset(server);
 }
@@ -82,9 +76,7 @@ static void app_serveAoidRequestDeviceKind(void *vself, Aoid *oid, void *vserver
 static void app_serveAoidRequestRtc(void *vself, Aoid *oid, void *vserver, int command){
 	Acpls *server = (Acpls *) vserver;
 	switch(command){
-		case CMD_AOID_GET_ACP_COMMAND_SUPPORTED:
-			aoidServer_sendSupportedNone(oid, server);
-			return;
+		CASE_AOID_GET_ACP_COMMAND_SUPPORTED(None)
 	}
 	acpls_reset(server);
 }
@@ -112,9 +104,7 @@ static void app_serveAoidRequestRtcDate(void *vself, Aoid *oid, void *vserver, i
 			}
 			acpls_reset(server);
 			return;
-		case CMD_AOID_GET_ACP_COMMAND_SUPPORTED:
-			aoidServer_sendSupportedGnS(oid, server);
-			return;
+		CASE_AOID_GET_ACP_COMMAND_SUPPORTED(GnS)
 	}
 	acpls_reset(server);
 }
@@ -142,9 +132,7 @@ static void app_serveAoidRequestRtcTime(void *vself, Aoid *oid, void *vserver, i
 			}
 			acpls_reset(server);
 			return;
-		case CMD_AOID_GET_ACP_COMMAND_SUPPORTED:
-			aoidServer_sendSupportedGnS(oid, server);
-			return;
+		CASE_AOID_GET_ACP_COMMAND_SUPPORTED(GnS)
 	}
 	acpls_reset(server);
 }
@@ -188,9 +176,7 @@ static void app_serveAoidRequestNoidFirst(void *vself, Aoid *oid, void *vserver,
 		case CMD_AOID_SET_NVRAM_VALUE:
 			AOID_NOID_SET_NVRAM_INT(is_first, yn_t)
 			return;
-		case CMD_AOID_GET_ACP_COMMAND_SUPPORTED:
-			aoidServer_sendSupportedGGS(oid, server);
-			return;
+		CASE_AOID_GET_ACP_COMMAND_SUPPORTED(GGS)
 	}
 	acpls_reset(server);
 }
@@ -207,9 +193,7 @@ static void app_serveAoidRequestNoidNext(void *vself, Aoid *oid, void *vserver, 
 		case CMD_AOID_SET_NVRAM_VALUE:
 			AOID_NOID_SET_NVRAM_INT(next_external_noid_id, int)
 			return;
-		case CMD_AOID_GET_ACP_COMMAND_SUPPORTED:
-			aoidServer_sendSupportedGGS(oid, server);
-			return;
+		CASE_AOID_GET_ACP_COMMAND_SUPPORTED(GGS)
 	}
 	acpls_reset(server);
 }
